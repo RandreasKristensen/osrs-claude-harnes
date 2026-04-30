@@ -1,0 +1,64 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.0.x'
+    - name: Lint
+      run: |
+        dotnet format osrs-claude-guide/services/osrs-guide/src/OsrsGuide.Web/OsrsGuide.Web.csproj --verify-no-changes
+        dotnet format osrs-claude-guide/services/monitor/src/Monitor.Web/Monitor.Web.csproj --verify-no-changes
+
+  build:
+    runs-on: ubuntu-latest
+    needs: lint
+    permissions:
+      contents: read
+      packages: write
+    steps:
+    - uses: actions/checkout@v3
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build and push osrs-guide
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        file: osrs-claude-guide/services/osrs-guide/Dockerfile
+        push: true
+        tags: ghcr.io/${{ github.repository }}/osrs-guide:latest
+    - name: Build and push monitor
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        file: osrs-claude-guide/services/monitor/Dockerfile
+        push: true
+        tags: ghcr.io/${{ github.repository }}/monitor:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    steps:
+    - uses: actions/checkout@v3
+    - uses: superfly/flyctl-actions/setup-flyctl@master
+    - name: Deploy osrs-guide
+      env:
+        FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      run: flyctl deploy --config osrs-claude-guide/infra/fly/osrs-guide.fly.toml
+    - name: Deploy monitor
+      env:
+        FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      run: flyctl deploy --config osrs-claude-guide/infra/fly/monitor.fly.toml
