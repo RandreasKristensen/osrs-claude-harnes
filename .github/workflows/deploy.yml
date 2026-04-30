@@ -38,7 +38,7 @@ jobs:
         context: osrs-claude-guide
         file: osrs-claude-guide/services/osrs-guide/Dockerfile
         push: true
-        tags: ghcr.io/randreasristensen/osrs-claude-harnes/osrs-guide:latest
+        tags: ghcr.io/randreaskristensen/osrs-claude-harnes/osrs-guide:latest
 
     - name: Build and push monitor
       uses: docker/build-push-action@v4
@@ -46,7 +46,7 @@ jobs:
         context: osrs-claude-guide
         file: osrs-claude-guide/services/monitor/Dockerfile
         push: true
-        tags: ghcr.io/randreasristensen/osrs-claude-harnes/monitor:latest
+        tags: ghcr.io/randreaskristensen/osrs-claude-harnes/monitor:latest
 
   # deploy:
   #   runs-on: ubuntu-latest
