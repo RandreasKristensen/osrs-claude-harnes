@@ -35,14 +35,15 @@ jobs:
     - name: Build and push osrs-guide
       uses: docker/build-push-action@v4
       with:
-        context: .
+        context: osrs-claude-guide
         file: osrs-claude-guide/services/osrs-guide/Dockerfile
         push: true
         tags: ghcr.io/randreasristensen/osrs-claude-harnes/osrs-guide:latest
+
     - name: Build and push monitor
       uses: docker/build-push-action@v4
       with:
-        context: .
+        context: osrs-claude-guide
         file: osrs-claude-guide/services/monitor/Dockerfile
         push: true
         tags: ghcr.io/randreasristensen/osrs-claude-harnes/monitor:latest
