@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSRS Guide</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+</head>
+<body>
+    <h1>OSRS Guide</h1>
+    <form hx-post="/ask" hx-target="#answer" hx-swap="innerHTML">
+        <input type="text" name="question" placeholder="Ask a question...">
+        <button type="submit">Ask</button>
+    </form>
+    <div id="answer"></div>
+</body>
+</html>
