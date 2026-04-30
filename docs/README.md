@@ -1,8 +1,12 @@
 # OSRS Claude Guide
 
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+
 A wiki-grounded AI assistant for Old School RuneScape. Ask questions in plain English, get accurate answers — the agent looks things up on the OSRS wiki instead of guessing.
 
 > **BYOK** — Bring Your Own Anthropic API key. No account required. No usage tracked server-side.
+
+This project is open source under the MIT license. You are free to use, modify, and distribute the code. See `LICENSE` for details.
 
 ---
 
@@ -30,7 +34,7 @@ Language models hallucinate OSRS game data. Drop rates, quest steps, item requir
 | Backend | ASP.NET Core (C#), minimal API |
 | Frontend | HTMX + plain HTML/CSS |
 | Containerisation | Docker + docker-compose |
-| CI/CD | GitLab CI (`.gitlab-ci.yml`) |
+| CI/CD | GitHub Actions (`.github/workflows/deploy.yml`) |
 | Hosting | Fly.io (free tier) |
 | External APIs | Anthropic API, OSRS MediaWiki API, prices.runescape.wiki |
 
@@ -47,9 +51,9 @@ Language models hallucinate OSRS game data. Drop rates, quest steps, item requir
 ### Run directly
 
 ```bash
-git clone https://gitlab.com/<your-username>/osrs-claude-guide.git
+git clone https://github.com/<your-username>/osrs-claude-guide.git
 cd osrs-claude-guide
-dotnet run --project src/OsrsGuide.Web
+dotnet run --project services/osrs-guide/src/OsrsGuide.Web
 ```
 
 Open `http://localhost:5000`, paste your API key, and start asking questions.
@@ -66,21 +70,35 @@ docker compose up --build
 
 ```
 osrs-claude-guide/
-├── src/
-│   └── OsrsGuide.Web/
-│       ├── Program.cs              # Minimal API setup, endpoints
-│       ├── Agent/
-│       │   ├── OsrsAgent.cs        # Agentic loop (tool-use)
-│       │   ├── Tools/
-│       │   │   ├── WikiSearchTool.cs
-│       │   │   ├── WikiPageTool.cs
-│       │   │   └── GePriceTool.cs
-│       │   └── WikiClient.cs       # MediaWiki API wrapper
-│       └── wwwroot/
-│           └── index.html          # HTMX frontend
-├── .gitlab-ci.yml                  # CI/CD pipeline
-├── Dockerfile
+├── services/
+│   ├── osrs-guide/
+│   │   ├── src/OsrsGuide.Web/
+│   │   │   ├── Agent/
+│   │   │   │   ├── OsrsAgent.cs
+│   │   │   │   ├── WikiClient.cs
+│   │   │   │   └── Tools/
+│   │   │   │       ├── WikiSearchTool.cs
+│   │   │   │       ├── WikiPageTool.cs
+│   │   │   │       └── GePriceTool.cs
+│   │   │   ├── wwwroot/index.html
+│   │   │   └── Program.cs
+│   │   └── Dockerfile
+│   └── monitor/
+│       ├── src/Monitor.Web/
+│       │   ├── Poller/HealthPoller.cs
+│       │   ├── Data/MonitorDb.cs
+│       │   ├── Api/DashboardEndpoints.cs
+│       │   ├── wwwroot/dashboard.html
+│       │   └── Program.cs
+│       └── Dockerfile
+├── infra/fly/
+│   ├── osrs-guide.fly.toml
+│   └── monitor.fly.toml
+├── docs/
+├── .github/workflows/
+│   └── deploy.yml
 ├── docker-compose.yml
+├── LICENSE
 └── README.md
 ```
 
@@ -88,21 +106,21 @@ osrs-claude-guide/
 
 ## CI/CD pipeline
 
-The pipeline is defined in `.gitlab-ci.yml` and runs on every push to `main`.
+The pipeline is defined in `.github/workflows/deploy.yml` and runs on every push to `main`.
 
 **Stages:**
 
-1. `lint` — `dotnet format --verify-no-changes`
-2. `build` — `dotnet build` + build and push Docker image to GitLab Container Registry
-3. `deploy` — Deploy to Fly.io using `flyctl deploy`
+1. `lint` — `dotnet format --verify-no-changes` on both projects
+2. `build` — build and push Docker images to GitHub Container Registry (`ghcr.io`)
+3. `deploy` — deploy to Fly.io using `flyctl deploy` (runs automatically on main after a successful build)
 
-**Required CI/CD variables** (set in GitLab → Settings → CI/CD → Variables):
+**Required repository secrets** (set in GitHub → Settings → Secrets and variables → Actions):
 
-| Variable | Description |
+| Secret | Description |
 |---|---|
-| `FLY_API_TOKEN` | Fly.io deploy token |
-| `CI_REGISTRY_USER` | Auto-provided by GitLab |
-| `CI_REGISTRY_PASSWORD` | Auto-provided by GitLab |
+| `FLY_API_TOKEN` | Fly.io deploy token — get it with `flyctl auth token` |
+
+`GITHUB_TOKEN` for container registry auth is provided automatically by GitHub Actions — no setup needed.
 
 No Anthropic API key is stored server-side. Users provide their own key at query time.
 
@@ -116,9 +134,10 @@ No Anthropic API key is stored server-side. Users provide their own key at query
 # Install flyctl
 curl -L https://fly.io/install.sh | sh
 
-# Authenticate and launch (first time)
+# Authenticate and launch (first time only, run once per service)
 fly auth login
-fly launch
+cd services/osrs-guide && fly launch
+cd services/monitor && fly launch
 
 # Deploy manually
 fly deploy
@@ -128,11 +147,11 @@ Fly.io's free tier includes 3 shared-CPU VMs with 256 MB RAM — more than enoug
 
 ### Alternative: Railway
 
-Connect your GitLab repository in the Railway dashboard. Add a `railway.json` or use the Dockerfile. Free $5/month credits cover a small always-on service.
+Connect your GitHub repository in the Railway dashboard. Add a `railway.json` or use the Dockerfile. Free $5/month credits cover a small always-on service.
 
 ### Aarhus University
 
-If you have access to department infrastructure (e.g. a VM or Kubernetes namespace via ITS or your supervisor), you can deploy the Docker image directly. Check with `it.au.dk` or your project supervisor for availability. The GitLab instance at `gitlab.au.dk` can be used as the remote with the same `.gitlab-ci.yml` — just update the `image:` registry references accordingly.
+If you have access to department infrastructure (a VM or Kubernetes namespace via ITS or your supervisor), you can deploy the Docker image directly. Check with `it.au.dk` or your project supervisor. The GitHub Actions pipeline can deploy to any Docker-capable host via SSH — just swap the `flyctl deploy` step for an `ssh` deploy step pointing at the AU server.
 
 ---
 
@@ -152,7 +171,7 @@ If you have access to department infrastructure (e.g. a VM or Kubernetes namespa
 | `get_wiki_page` | `oldschool.runescape.wiki/api.php?action=parse&prop=wikitext` | Fetching full page content |
 | `get_ge_price` | `prices.runescape.wiki/api/v1/latest?id=<item_id>` | Grand Exchange prices |
 
-All endpoints are public and require no authentication. Please include a descriptive `User-Agent` header as requested by the wiki's API policy.
+All endpoints are public and require no authentication. A descriptive `User-Agent` header is included in all requests as requested by the wiki's API policy.
 
 ---
 
@@ -168,10 +187,10 @@ All endpoints are public and require no authentication. Please include a descrip
 
 ## Contributing
 
-This is a personal side project. Issues and PRs are welcome via GitLab.
+Issues and PRs are welcome. See the full project documentation in `/docs`.
 
 ---
 
 ## License
 
-MIT
+MIT — see `LICENSE`.
