@@ -45,7 +45,7 @@ jobs:
         context: .
         file: osrs-claude-guide/services/monitor/Dockerfile
         push: true
-        tags: ghcr.io/${{ github.repository | lower }}/osrs-guide:latest
+        tags: ghcr.io/${{ github.repository | lower }}/monitor:latest
 
   # deploy:
   #   runs-on: ubuntu-latest
