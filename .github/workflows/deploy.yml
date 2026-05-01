@@ -17,6 +17,8 @@ jobs:
       run: |
         dotnet format osrs-claude-guide/services/osrs-guide/src/OsrsGuide.Web/OsrsGuide.Web.csproj --verify-no-changes
         dotnet format osrs-claude-guide/services/monitor/src/Monitor.Web/Monitor.Web.csproj --verify-no-changes
+    - name: Test
+      run: dotnet test osrs-claude-guide/services/osrs-guide/src/OsrsGuide.UnitTests/OsrsGuide.UnitTests.csproj --no-build --verbosity normal
 
   build:
     runs-on: ubuntu-latest

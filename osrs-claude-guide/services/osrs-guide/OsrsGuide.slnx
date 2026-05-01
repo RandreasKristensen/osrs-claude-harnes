@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/OsrsGuide.UnitTests/OsrsGuide.UnitTests.csproj" />
+    <Project Path="src/OsrsGuide.Web/OsrsGuide.Web.csproj" />
+  </Folder>
+</Solution>
