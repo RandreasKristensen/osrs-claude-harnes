@@ -44,7 +44,7 @@ Language models hallucinate OSRS game data. Drop rates, quest steps, item requir
 
 ### Prerequisites
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download)
 - [Docker](https://www.docker.com/products/docker-desktop) (optional, for container-based dev)
 - An [Anthropic API key](https://console.anthropic.com/)
 

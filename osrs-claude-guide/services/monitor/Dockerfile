@@ -12,7 +12,7 @@ WORKDIR "/src/Monitor.Web"
 RUN dotnet build "Monitor.Web.csproj" -c Release -o /app/build
 
 # Create the runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS publish
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS publish
 WORKDIR /app
 COPY --from=build /app/build .
 ENTRYPOINT ["dotnet", "Monitor.Web.dll"]
